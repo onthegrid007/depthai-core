@@ -200,7 +200,7 @@ std::shared_ptr<ADatatype> StreamMessageParser::parseMessage(streamPacketDesc_t*
             break;
 
         case DatatypeEnum::FeatureTrackerConfigRvc4:
-            return parseDatatype<FeatureTrackerConfigRvc4>(metadataStart, serializedObjectSize, data);
+            return parseDatatype<FeatureTrackerConfigRvc4>(metadataStart, serializedObjectSize, data, fd);
             break;
 
         case DatatypeEnum::BenchmarkReport:
