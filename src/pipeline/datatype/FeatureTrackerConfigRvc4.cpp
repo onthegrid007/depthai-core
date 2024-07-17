@@ -32,21 +32,21 @@ FeatureTrackerConfigRvc4& FeatureTrackerConfigRvc4::setHwMotionEstimation() {
 }
 
 FeatureTrackerConfigRvc4& FeatureTrackerConfigRvc4::setHarrisCornerDetectorThreshold(std::int32_t cornerDetectorThreshold) {
-    if(cornerDetectorThreshold >= 0 and cornerDetectorThreshold <= 25000) {
+    if(cornerDetectorThreshold >= 0 && cornerDetectorThreshold <= 25000) {
         cornerDetector.thresholds.harrisScore = cornerDetectorThreshold;
     }
     return *this;
 }
 
 FeatureTrackerConfigRvc4& FeatureTrackerConfigRvc4::setHarrisCornerDetectorRobustness(std::int32_t cornerDetectorRobustness) {
-    if(cornerDetectorRobustness >= 0 and cornerDetectorRobustness <= 127) {
+    if(cornerDetectorRobustness >= 0 && cornerDetectorRobustness <= 127) {
         cornerDetector.thresholds.robustness = cornerDetectorRobustness;
     }
     return *this;
 }
 
 FeatureTrackerConfigRvc4& FeatureTrackerConfigRvc4::setConfidence(std::int32_t confidenceThreshold) {
-    if(confidenceThreshold >= 0 and confidenceThreshold <= 255) {
+    if(confidenceThreshold >= 0 && confidenceThreshold <= 255) {
        featureMaintainer.confidenceThreshold = confidenceThreshold;
     }
     return *this;
