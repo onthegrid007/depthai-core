@@ -10,7 +10,6 @@ void bind_buffer(pybind11::module& m, void* pCallstack);
 void bind_cameracontrol(pybind11::module& m, void* pCallstack);
 void bind_edgedetectorconfig(pybind11::module& m, void* pCallstack);
 void bind_featuretrackerconfig(pybind11::module& m, void* pCallstack);
-void bind_featuretrackerconfigRvc4(pybind11::module& m, void* pCallstack);
 void bind_tofconfig(pybind11::module& m, void* pCallstack);
 void bind_imagemanipconfig(pybind11::module& m, void* pCallstack);
 void bind_imagemanipconfigv2(pybind11::module& m, void* pCallstack);
@@ -45,7 +44,6 @@ void DatatypeBindings::addToCallstack(std::deque<StackFunction>& callstack) {
     callstack.push_front(bind_cameracontrol);
     callstack.push_front(bind_edgedetectorconfig);
     callstack.push_front(bind_featuretrackerconfig);
-    callstack.push_front(bind_featuretrackerconfigRvc4);
     callstack.push_front(bind_tofconfig);
     callstack.push_front(bind_imagemanipconfig);
     callstack.push_front(bind_imagemanipconfigv2);
@@ -109,7 +107,6 @@ void DatatypeBindings::bind(pybind11::module& m, void* pCallstack){
         .value("IMUData", DatatypeEnum::IMUData)
         .value("StereoDepthConfig", DatatypeEnum::StereoDepthConfig)
         .value("FeatureTrackerConfig", DatatypeEnum::FeatureTrackerConfig)
-        .value("FeatureTrackerConfigRvc4", DatatypeEnum::FeatureTrackerConfigRvc4)
         .value("TrackedFeatures", DatatypeEnum::TrackedFeatures)
         .value("PointCloudConfig", DatatypeEnum::PointCloudConfig)
         .value("PointCloudData", DatatypeEnum::PointCloudData)

@@ -11,7 +11,6 @@
 #include "datatype/EdgeDetectorConfig.hpp"
 #include "datatype/EncodedFrame.hpp"
 #include "datatype/FeatureTrackerConfig.hpp"
-#include "datatype/FeatureTrackerConfigRvc4.hpp"
 #include "datatype/IMUData.hpp"
 #include "datatype/ImageManipConfig.hpp"
 #include "datatype/ImageManipConfigV2.hpp"

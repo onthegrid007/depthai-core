@@ -34,7 +34,6 @@
 #include "depthai/pipeline/node/IMU.hpp"
 #include "depthai/pipeline/node/EdgeDetector.hpp"
 #include "depthai/pipeline/node/FeatureTracker.hpp"
-#include "depthai/pipeline/node/FeatureTrackerRvc4.hpp"
 #include "depthai/pipeline/node/AprilTag.hpp"
 #include "depthai/pipeline/node/DetectionParser.hpp"
 #include "depthai/pipeline/node/UVC.hpp"
@@ -234,7 +233,6 @@ void PipelineBindings::bind(pybind11::module& m, void* pCallstack){
         .def("createIMU", &Pipeline::create<node::IMU>)
         .def("createEdgeDetector", &Pipeline::create<node::EdgeDetector>)
         .def("createFeatureTracker", &Pipeline::create<node::FeatureTracker>)
-        .def("createFeatureTrackerRvc4", &Pipeline::create<node::FeatureTrackerRvc4>)
         .def("createAprilTag", &Pipeline::create<node::AprilTag>)
         .def("createDetectionParser", &Pipeline::create<node::DetectionParser>)
         .def("createUVC", &Pipeline::create<node::UVC>)

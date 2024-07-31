@@ -10,7 +10,6 @@
 #include "node/DetectionParser.hpp"
 #include "node/EdgeDetector.hpp"
 #include "node/FeatureTracker.hpp"
-#include "node/FeatureTrackerRvc4.hpp"
 #include "node/IMU.hpp"
 #include "node/ImageManip.hpp"
 #include "node/ImageManipV2.hpp"
