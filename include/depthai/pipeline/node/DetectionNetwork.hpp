@@ -22,7 +22,9 @@ class DetectionNetwork : public NodeGroup {
     ~DetectionNetwork() override;
 
     [[nodiscard]] static std::shared_ptr<DetectionNetwork> create() {
-        return std::make_shared<DetectionNetwork>();
+        auto networkPtr = std::make_shared<DetectionNetwork>();
+        networkPtr->buildInternal();
+        return networkPtr;
     }
     std::shared_ptr<DetectionNetwork> build(Node::Output& input, const NNArchive& nnArchive);
     bool runOnHost() const override {
@@ -56,10 +58,19 @@ class DetectionNetwork : public NodeGroup {
     Output& passthrough;
 
     /**
-     * Apply NNArchive config to this Node and load network blob into assets and use once pipeline is started.
+     * @brief Set NNArchive for this Node. If the archive's type is SUPERBLOB, use default number of shaves.
      *
+     * @param nnArchive: NNArchive to set
      */
     void setNNArchive(const NNArchive& nnArchive);
+
+    /**
+     * @brief Set NNArchive for this Node, throws if the archive's type is not SUPERBLOB
+     *
+     * @param nnArchive: NNArchive to set
+     * @param numShaves: Number of shaves to use
+     */
+    void setNNArchive(const NNArchive& nnArchive, int numShaves);
 
     // Specify local filesystem path to load the blob (which gets loaded at loadAssets)
     /**
@@ -86,13 +97,10 @@ class DetectionNetwork : public NodeGroup {
     void setBlob(const dai::Path& path);
 
     /**
-     * Load network xml and bin files into assets.
-     * @param xmlModelPath Path to the .xml model file.
-     * @param binModelPath Path to the .bin file of the model. If left empty, it is assumed that the
-     *                     name is the same as the xml model with a .bin extension.
-     * @note If this function is called, the device automatically loads the model from the XML and not the blob
+     * Load network model into assets.
+     * @param modelPath Path to the model file.
      */
-    void setXmlModelPath(const dai::Path& xmlModelPath, const dai::Path& binModelPath = "");
+    void setModelPath(const dai::Path& modelPath);
 
     /**
      * Specifies how many frames will be available in the pool
@@ -152,16 +160,15 @@ class DetectionNetwork : public NodeGroup {
 
     std::optional<std::vector<std::string>> getClasses() const;
 
+    virtual void buildInternal();
+
    private:
+    void setNNArchiveBlob(const NNArchive& nnArchive);
+    void setNNArchiveSuperblob(const NNArchive& nnArchive, int numShaves);
+    void setNNArchiveOther(const NNArchive& nnArchive);
+
     class Impl;
     Pimpl<Impl> pimpl;
-
-   protected:
-    void build();
-    bool isBuild = false;
-    bool needsBuild() override {
-        return !isBuild;
-    }
 };
 
 /**
@@ -170,13 +177,15 @@ class DetectionNetwork : public NodeGroup {
 class MobileNetDetectionNetwork : public DetectionNetwork {
    public:
     [[nodiscard]] static std::shared_ptr<MobileNetDetectionNetwork> create() {
-        return std::make_shared<MobileNetDetectionNetwork>();
+        auto networkPtr = std::make_shared<MobileNetDetectionNetwork>();
+        networkPtr->buildInternal();
+        return networkPtr;
     }
     bool runOnHost() const override {
         return false;
     };
 
-    std::shared_ptr<MobileNetDetectionNetwork> build();
+    void buildInternal() override;
 };
 
 /**
@@ -184,9 +193,10 @@ class MobileNetDetectionNetwork : public DetectionNetwork {
  */
 class YoloDetectionNetwork : public DetectionNetwork {
    public:
-    std::shared_ptr<YoloDetectionNetwork> build();
     [[nodiscard]] static std::shared_ptr<YoloDetectionNetwork> create() {
-        return std::make_shared<YoloDetectionNetwork>();
+        auto networkPtr = std::make_shared<YoloDetectionNetwork>();
+        networkPtr->buildInternal();
+        return networkPtr;
     }
     bool runOnHost() const override {
         return false;
@@ -258,6 +268,8 @@ class YoloDetectionNetwork : public DetectionNetwork {
     std::map<std::string, std::vector<int>> getAnchorMasks() const;
     /// Get Iou threshold
     float getIouThreshold() const;
+
+    void buildInternal() override;
 };
 
 }  // namespace node

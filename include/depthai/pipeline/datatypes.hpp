@@ -14,6 +14,7 @@
 #include "datatype/FeatureTrackerConfigRvc4.hpp"
 #include "datatype/IMUData.hpp"
 #include "datatype/ImageManipConfig.hpp"
+#include "datatype/ImageManipConfigV2.hpp"
 #include "datatype/ImgDetections.hpp"
 #include "datatype/ImgFrame.hpp"
 #include "datatype/MessageGroup.hpp"

@@ -13,6 +13,7 @@
 #include "node/FeatureTrackerRvc4.hpp"
 #include "node/IMU.hpp"
 #include "node/ImageManip.hpp"
+#include "node/ImageManipV2.hpp"
 #include "node/MessageDemux.hpp"
 #include "node/MonoCamera.hpp"
 #include "node/NeuralNetwork.hpp"
@@ -36,6 +37,7 @@
 #ifdef DEPTHAI_HAVE_OPENCV_SUPPORT
     #include "node/host/Display.hpp"
     #include "node/host/HostCamera.hpp"
+    #include "node/host/HostNode.hpp"
     #include "node/host/Record.hpp"
     #include "node/host/Replay.hpp"
 #endif
