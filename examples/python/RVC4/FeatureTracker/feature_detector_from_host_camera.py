@@ -4,6 +4,7 @@ import depthai as dai
 import cv2
 import time
 import numpy as np
+from pathlib import Path
 
 def drawFeatures(frame, features):
         pointColor = (0, 0, 255)
@@ -12,10 +13,17 @@ def drawFeatures(frame, features):
         for feature in features:
             # descriptor = feature.descriptor
             # print(descriptor)
-            if feature.age < 2:
-                cv2.circle(frame, (int(feature.position.x), int(feature.position.y)), circleRadius, greenColor, -1, cv2.LINE_AA, 0)
-            else:
+            if feature.age > 2:
                 cv2.circle(frame, (int(feature.position.x), int(feature.position.y)), circleRadius, pointColor, -1, cv2.LINE_AA, 0)
+            # elif feature.age < 255:
+            #     cv2.circle(frame, (int(feature.position.x), int(feature.position.y)), circleRadius, (0, 0, feature.age), -1, cv2.LINE_AA, 0)
+            else:
+                cv2.circle(frame, (int(feature.position.x), int(feature.position.y)), circleRadius, greenColor, -1, cv2.LINE_AA, 0)
+
+examplesRoot = Path(__file__).parent / Path('../../').resolve()
+models = examplesRoot / Path('models')
+videoPath = models / Path('construction_vest.mp4')
+
 
 class HostCamera(dai.node.ThreadedHostNode):
     def __init__(self):
@@ -23,13 +31,16 @@ class HostCamera(dai.node.ThreadedHostNode):
         self.output = dai.Node.Output(self)
     def run(self):
         # Create a VideoCapture object
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(videoPath)
+        # cap = cv2.VideoCapture(0)
         if not cap.isOpened():
             pipeline.stop()
             raise RuntimeError("Error: Couldn't open host camera")
         while self.isRunning():
             # frame = depthImg
             ret, frame = cap.read()
+            # frame = cv2.imread("/home/nebojsa/Downloads/image.jpg")
+            frame = cv2.resize(frame, (640, 640), interpolation = cv2.INTER_LINEAR)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             imgFrame = dai.ImgFrame()
             imgFrame.setData(frame)
@@ -52,12 +63,15 @@ initialThreshold = 1000
 initialRobustness = 100
 
 def on_trackbar(val):
-    cfg = dai.FeatureTrackerConfigRvc4()
+    cfg = dai.FeatureTrackerConfig()
+    cornerDetector = dai.FeatureTrackerConfig.CornerDetector()
+    cornerDetector.numMaxFeatures = cv2.getTrackbarPos('numMaxFeatures', 'Features')
 
-    cfg.setHarrisCornerDetectorThreshold(cv2.getTrackbarPos('harris_score','Features'))
-    cfg.setHarrisCornerDetectorRobustness(cv2.getTrackbarPos('robustness','Features'))
-    cfg.setNumMaxFeatures(cv2.getTrackbarPos('numMaxFeatures', 'Features'))
+    thresholds = dai.FeatureTrackerConfig.CornerDetector.Thresholds()
+    thresholds.initialValue = cv2.getTrackbarPos('harris_score','Features')
+    cornerDetector.thresholds = thresholds
 
+    cfg.setCornerDetector(cornerDetector)
     cfg.setMotionEstimator(motionEstimator)
 
     inputConfigQueue.send(cfg)
@@ -67,7 +81,7 @@ cv2.namedWindow('Features')
 
 # create trackbars threshold and robustness change
 cv2.createTrackbar('harris_score','Features',2000,25000, on_trackbar)
-cv2.createTrackbar('robustness','Features',100,127, on_trackbar)
+# cv2.createTrackbar('robustness','Features',100,127, on_trackbar)
 cv2.createTrackbar('numMaxFeatures','Features',256,1024, on_trackbar)
 
 
@@ -77,12 +91,24 @@ with dai.Device(info) as device:
         hostCamera = pipeline.create(HostCamera)
         camQueue = hostCamera.output.createOutputQueue()
         
-        featureTrackerLeft = pipeline.create(dai.node.FeatureTrackerRvc4)
+        featureTrackerLeft = pipeline.create(dai.node.FeatureTracker)
        
-        featureTrackerLeft.initialConfig.setHarrisCornerDetectorThreshold(initialThreshold)
-        featureTrackerLeft.initialConfig.setHarrisCornerDetectorRobustness(initialRobustness)
-        featureTrackerLeft.initialConfig.setCornerDetector(dai.FeatureTrackerConfigRvc4.CornerDetector.Type.HARRIS)
-        featureTrackerLeft.initialConfig.setNumMaxFeatures(256)
+        # featureTrackerLeft.initialConfig.setHarrisCornerDetectorThreshold(initialThreshold)
+        # featureTrackerLeft.initialConfig.setHarrisCornerDetectorRobustness(initialRobustness)
+        featureTrackerLeft.initialConfig.setCornerDetector(dai.FeatureTrackerConfig.CornerDetector.Type.HARRIS)
+        featureTrackerLeft.initialConfig.setMotionEstimator(False)
+
+        motionEstimator = dai.FeatureTrackerConfig.MotionEstimator()
+        motionEstimator.enable = True
+        featureTrackerLeft.initialConfig.setMotionEstimator(motionEstimator)
+
+        cornerDetector = dai.FeatureTrackerConfig.CornerDetector()
+        cornerDetector.numMaxFeatures = 256
+
+
+
+
+        # featureTrackerLeft.initialConfig.setNumMaxFeatures(256)
 
 
         outputFeaturePassthroughQueue = featureTrackerLeft.passthroughInputImage.createOutputQueue()
@@ -91,10 +117,12 @@ with dai.Device(info) as device:
         hostCamera.output.link(featureTrackerLeft.inputImage)
 
         inputConfigQueue = featureTrackerLeft.inputConfig.createInputQueue()
-        motionEstimator = dai.FeatureTrackerConfigRvc4.MotionEstimator()
-        motionEstimator.enable = False
 
-        thresholds = dai.FeatureTrackerConfigRvc4.CornerDetector.Thresholds()
+        thresholds = dai.FeatureTrackerConfig.CornerDetector.Thresholds()
+        thresholds.initialValue = cv2.getTrackbarPos('harris_score','Features')
+
+        cornerDetector.thresholds = thresholds
+        featureTrackerLeft.initialConfig.setCornerDetector(cornerDetector)
 
         pipeline.start()
         while pipeline.isRunning():
@@ -118,10 +146,17 @@ with dai.Device(info) as device:
             if key == ord('q'):
                 break
             elif key == ord('m'):
-                cfg = dai.FeatureTrackerConfigRvc4()
-                cfg.setHarrisCornerDetectorThreshold(cv2.getTrackbarPos('harris_score','Features'))
-                cfg.setHarrisCornerDetectorRobustness(cv2.getTrackbarPos('robustness','Features'))
-                cfg.setNumMaxFeatures(cv2.getTrackbarPos('numMaxFeatures', 'Features'))
+                cfg = dai.FeatureTrackerConfig()
+                cornerDetector = dai.FeatureTrackerConfig.CornerDetector()
+                cornerDetector.numMaxFeatures = cv2.getTrackbarPos('numMaxFeatures', 'Features')
+
+                thresholds = dai.FeatureTrackerConfig.CornerDetector.Thresholds()
+                thresholds.initialValue = cv2.getTrackbarPos('harris_score','Features')
+                cornerDetector.thresholds = thresholds
+
+                cfg.setCornerDetector(cornerDetector)
+                cfg.setMotionEstimator(motionEstimator)
+
                 if motionEstimator.enable == False:
                     motionEstimator.enable = True
                     cfg.setMotionEstimator(motionEstimator)
