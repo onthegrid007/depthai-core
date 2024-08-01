@@ -9,35 +9,6 @@ from pathlib import Path
 examplesRoot = Path(__file__).parent / Path('../../').resolve()
 models = examplesRoot / Path('models')
 videoPath = models / Path('construction_vest.mp4')
-
-
-class HostCamera(dai.node.ThreadedHostNode):
-    def __init__(self):
-        dai.node.ThreadedHostNode.__init__(self)
-        self.output = dai.Node.Output(self)
-    def run(self):
-        # Create a VideoCapture object
-        cap = cv2.VideoCapture(videoPath)
-        # cap = cv2.VideoCapture(0)
-        if not cap.isOpened():
-            pipeline.stop()
-            raise RuntimeError("Error: Couldn't open host camera")
-        while self.isRunning():
-            # frame = depthImg
-            ret, frame = cap.read()
-            # frame = cv2.imread("/home/nebojsa/Downloads/image.jpg")
-            frame = cv2.resize(frame, (640, 640), interpolation = cv2.INTER_LINEAR)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            imgFrame = dai.ImgFrame()
-            imgFrame.setData(frame)
-            imgFrame.setWidth(frame.shape[1])
-            imgFrame.setHeight(frame.shape[0])
-            imgFrame.setType(dai.ImgFrame.Type.GRAY8)
-            # Send the message
-            self.output.send(imgFrame)
-            # Wait for the next frame
-            time.sleep(0.1)
-
   
 class FeatureTrackerDrawer:
 
@@ -140,8 +111,10 @@ cv2.createTrackbar('numMaxFeatures','Features',256,1024, on_trackbar)
 # Connect to device and start pipeline
 with dai.Device(info) as device:
     with dai.Pipeline(device) as pipeline:
-        hostCamera = pipeline.create(HostCamera)
-        camQueue = hostCamera.output.createOutputQueue()
+        replay = pipeline.create(dai.node.ReplayVideo)
+        replay.setReplayVideoFile(videoPath)
+        replay.setSize(640, 640)
+        replay.setOutFrameType(dai.ImgFrame.Type.GRAY8)
 
         featureTrackerLeft = pipeline.create(dai.node.FeatureTracker)
 
@@ -163,7 +136,7 @@ with dai.Device(info) as device:
         outputFeaturePassthroughQueue = featureTrackerLeft.passthroughInputImage.createOutputQueue()
         outputFeatureQueue = featureTrackerLeft.outputFeatures.createOutputQueue()
 
-        hostCamera.output.link(featureTrackerLeft.inputImage)
+        replay.out.link(featureTrackerLeft.inputImage)
 
         # config = featureTrackerLeft.initialConfig
         inputConfigQueue = featureTrackerLeft.inputConfig.createInputQueue()
@@ -179,10 +152,6 @@ with dai.Device(info) as device:
     
         pipeline.start()
         while pipeline.isRunning():
-            inImage : dai.ImgFrame = camQueue.get()
-            cv2.imshow("frame", inImage.getCvFrame())
-
-
             outputPassthroughImage : dai.ImgFrame = outputFeaturePassthroughQueue.get()
 
             passthroughImage = outputPassthroughImage.getCvFrame()
