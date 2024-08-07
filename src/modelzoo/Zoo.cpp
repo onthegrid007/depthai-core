@@ -206,6 +206,8 @@ void ZooManager::downloadModel() {
     if(!modelDescription.compressionLevel.empty()) requestBody["variables"]["input"]["compressionLevel"] = modelDescription.compressionLevel;
 
     // Send HTTP request to Hub
+    Logging::getInstance().logger.debug("Sending HTTP request to {}", MODEL_ZOO_URL);
+    Logging::getInstance().logger.debug("HTTP body {}", requestBody.dump());
     cpr::Response response = cpr::Post(cpr::Url{MODEL_ZOO_URL}, cpr::Body{requestBody.dump()});
     if(checkIsErrorHub(response)) {
         removeModelCacheFolder();
