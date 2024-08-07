@@ -207,13 +207,50 @@ class NNData : public Buffer {
         return addTensor<_Ty>(name, xt::adapt(data, std::vector<size_t>{1, data.size()}));
     };
 
+    template <typename _Ty = double>
+    NNData& addTensor(const std::string& name, const std::vector<_Ty>& data, TensorInfo::StorageOrder order) {
+        return addTensor<_Ty>(name, xt::adapt(data, std::vector<size_t>{1, data.size()}), order);
+    };
+
+    /**
+     * Set a layer with datatype FP16. Double values are converted to FP16.
+     * @param name Name of the layer
+     * @param data Data to store
+     */
+    template <typename _Ty = double>
+    NNData& addTensor(const std::string& name, const std::vector<std::vector<_Ty>>& data) {
+        return addTensor<_Ty>(name, xt::adapt(data, std::vector<size_t>{data.size(), data[0].size()}));
+    };
+
+    template <typename _Ty = double>
+    NNData& addTensor(const std::string& name, const xt::xarray<_Ty>& tensor) {
+        TensorInfo::StorageOrder order;
+        switch(tensor.shape().size()) {
+            case 1:
+                order = TensorInfo::StorageOrder::H;
+                break;
+            case 2:
+                order = TensorInfo::StorageOrder::CN;
+                break;
+            case 3:
+                order = TensorInfo::StorageOrder::CHW;
+                break;
+            case 4:
+                order = TensorInfo::StorageOrder::NCHW;
+                break;
+            default:
+                throw std::runtime_error("Unsupported tensor shape. Only 1D, 2D, 3D and 4D tensors are supported");
+        }
+        return addTensor(name, tensor, order);
+    }
+
     /**
      * Add a tensor. Float values are converted to FP16 and integers are cast to bytes.
      * @param name Name of the tensor
      * @param tensor Tensor to store
      */
     template <typename _Ty = double>
-    NNData& addTensor(const std::string& name, const xt::xarray<_Ty>& tensor) {
+    NNData& addTensor(const std::string& name, const xt::xarray<_Ty>& tensor, const TensorInfo::StorageOrder order) {
         static_assert(std::is_integral<_Ty>::value || std::is_floating_point<_Ty>::value, "Tensor type needs to be integral or floating point");
 
         // Check if data is vector type of data
@@ -255,10 +292,14 @@ class NNData : public Buffer {
         info.offset = static_cast<unsigned int>(offset);
         info.dataType = std::is_integral<_Ty>::value ? TensorInfo::DataType::U8F : TensorInfo::DataType::FP16;
         info.numDimensions = tensor.dimension();
+        info.order = order;
         for(uint32_t i = 0; i < tensor.dimension(); i++) {
             info.dims.push_back(tensor.shape()[i]);
             info.strides.push_back(tensor.strides()[i] * sizeof(uint16_t));
         }
+
+        // Validate storage order - past this point, the tensor shape and storage order should be correct
+        info.validateStorageOrder();
 
         tensors.push_back(info);
         return *this;
