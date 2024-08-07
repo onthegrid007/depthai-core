@@ -85,6 +85,7 @@ std::string generateErrorMessageHub(const cpr::Response& response) {
     std::string errorMessage;
     errorMessage += "There was an error while sending a request to the Hub\n";
     errorMessage += "HTTP status code: " + std::to_string(response.status_code) + "\n";
+    errorMessage += "CRP error code: " + std::to_string(static_cast<int>(response.error.code)) + "\n";
 
     if(response.status_code == cpr::status::HTTP_OK) {
         nlohmann::json responseJson = nlohmann::json::parse(response.text);
