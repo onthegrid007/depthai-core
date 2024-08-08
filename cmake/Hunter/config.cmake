@@ -308,8 +308,8 @@ hunter_config(
 hunter_config(
     cpr
     VERSION "1.4.0"
-    URL "https://github.com/luxonis/cpr/archive/a1d28dbbaccda3df8fddd993b2cd916f64f9da56.tar.gz"
-    SHA1 "14e18d04d05e36e920aa90ee744952bf55783ea4"
+    URL "https://github.com/lnotspotl/cpr/archive/32aa5c8e66fa0843597029d41bdee93b1a9cdf27.tar.gz"
+    SHA1 "5d43f8a38d8cf329b514977c2c0af078230fb8f2"
 )
 
 hunter_config(
